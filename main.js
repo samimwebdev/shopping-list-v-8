@@ -6,18 +6,9 @@ const msgElm = document.querySelector('.msg')
 const collectionElm = document.querySelector('.collection')
 const form = document.querySelector('form')
 
-let products = [
-  //   {
-  //     id: 1,
-  //     name: 'Potato',
-  //     price: 30,
-  //   },
-  //   {
-  //     id: 2,
-  //     name: 'Banana',
-  //     price: 20,
-  //   },
-]
+let products = localStorage.getItem('storeProducts')
+  ? JSON.parse(localStorage.getItem('storeProducts'))
+  : []
 
 function receiveInputs() {
   const name = nameInputElm.value
@@ -73,6 +64,12 @@ function addProduct(name, price) {
 }
 
 function showProductToUI(productInfo) {
+  //Remove not found Product message on adding new Product
+  const notFoundMsgElm = document.querySelector('.not-found-product')
+  if (notFoundMsgElm) {
+    notFoundMsgElm.remove()
+  }
+
   const { id, name, price } = productInfo
   const elm = `<li
             class="list-group-item collection-item d-flex flex-row justify-content-between"
@@ -91,6 +88,19 @@ function showProductToUI(productInfo) {
   showMessage('Product Added SuccessFully')
 }
 
+function addProductToStorage(product) {
+  let products
+  if (localStorage.getItem('storeProducts')) {
+    products = JSON.parse(localStorage.getItem('storeProducts'))
+    //update and add the new Product
+    products.push(product)
+  } else {
+    products = []
+    products.push(product)
+  }
+  localStorage.setItem('storeProducts', JSON.stringify(products))
+}
+
 function handleFormSubmit(evt) {
   //prevent browser reloading
   evt.preventDefault()
@@ -106,6 +116,8 @@ function handleFormSubmit(evt) {
   //add Product to data store
   const product = addProduct(name, price)
 
+  //add data to localStorage
+  addProductToStorage(product)
   //add product info to UI
   showProductToUI(product)
   console.log(name, price)
@@ -126,16 +138,57 @@ function removeItemFromUI(id) {
   showMessage('Product Deleted Successfully', 'warning')
 }
 
+function removeProductFromStorage(id) {
+  let products
+  products = JSON.parse(localStorage.getItem('storeProducts'))
+  products = products.filter((product) => product.id !== id)
+  localStorage.setItem('storeProducts', JSON.stringify(products))
+}
+
 function handleManipulateProduct(evt) {
   if (evt.target.classList.contains('delete-product')) {
     //get the product Id
     const id = getProductId(evt)
     //remove product from data store
     removeItem(id)
+    //remove item form localStorage
+    removeProductFromStorage(id)
+
     //remove product from UI
     removeItemFromUI(id)
   }
 }
 
+function showAllProductsToUI(products) {
+  let liElms
+
+  liElms =
+    products.length === 0
+      ? '<li class="list-group-item collection-item not-found-product">NO Products to Show</li>'
+      : ''
+  //sorting product in descending order
+  products.sort((a, b) => b.id - a.id)
+
+  products.forEach((product) => {
+    const { id, name, price } = product
+    liElms += `<li
+            class="list-group-item collection-item d-flex flex-row justify-content-between"
+            data-productId="${id}"
+          >
+            <div class="product-info">
+              <strong>${name}</strong>- <span class="price">$${price}</span>
+            </div>
+            <div class="action-btn">
+              <i class="fa fa-pencil-alt edit-product me-2"></i>
+              <i class="fa fa-trash-alt delete-product"></i>
+            </div>
+          </li>`
+  })
+  collectionElm.insertAdjacentHTML('afterbegin', liElms)
+}
 form.addEventListener('submit', handleFormSubmit)
 collectionElm.addEventListener('click', handleManipulateProduct)
+
+document.addEventListener('DOMContentLoaded', () =>
+  showAllProductsToUI(products)
+)

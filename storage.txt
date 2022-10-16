@@ -1,0 +1,13 @@
+Client side  (only local to the user) (local)
+========================================
+LocalStorage (Remain stored in browser, need to clear manually or programmatically )
+SessionStorage (Remain stored in browser, disappears after browser closure)
+indexDB (handling more complex data)
+
+Server Side (central location)
+=====================================
+Database
+ SQL - MySQL, POSTGRESQL
+ NoSQL- MongoDB
+ Graph Database- Neo4j
+
